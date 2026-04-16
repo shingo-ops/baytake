@@ -1,0 +1,41 @@
+{
+  "server_name": "BAYTAKE",
+  "brand": {
+    "color_gold": "#C9A84C",
+    "color_black": "#0A0A0A",
+    "color_red": "#B22222",
+    "tagline": "TAKE OVER THE BAY"
+  },
+  "categories": {
+    "information": "📋 INFORMATION",
+    "community": "🤝 COMMUNITY",
+    "management": "🔒 MANAGEMENT"
+  },
+  "channels": {
+    "announcements": "📣｜お知らせ",
+    "alerts": "🚨｜トレンドアラート",
+    "introduction": "👋｜自己紹介",
+    "chat": "💬｜交流",
+    "tweets": "💭｜つぶやき",
+    "daily_report": "📝｜日報",
+    "weekly_report": "📊｜週報",
+    "monthly_report": "📈｜月報",
+    "info_share": "💡｜情報提供",
+    "proposals": "🙋｜提案",
+    "audit": "🔍｜監査報告",
+    "ops": "📋｜業務連絡",
+    "consult": "💬｜相談",
+    "admin_proposals": "💡｜提案",
+    "reports": "📝｜報告"
+  },
+  "roles": {
+    "member": "BAYTAKE Member",
+    "admin": "BAYTAKE Admin",
+    "developer": "Developer"
+  },
+  "permissions": {
+    "information": "全員閲覧可・書き込み不可",
+    "community": "認証済みメンバーのみ",
+    "management": "管理者・開発者のみ"
+  }
+}

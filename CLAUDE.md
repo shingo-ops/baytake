@@ -9,22 +9,42 @@ eBayマーケットを先読みする招待制データコミュニティ
 - フォント: Arial Black（見出し）
 - タグライン: TAKE OVER THE BAY
 
+## リポジトリ構成
+baytake/（親）
+├── discord/          ← Discord設定・Bot
+│   ├── .env.example  ← トークンテンプレート（コミットOK）
+│   ├── .env          ← 実際の値（.gitignore・絶対コミット禁止）
+│   ├── config.json   ← チャンネル・ロール設定（コミットOK）
+│   └── bot/          ← Discord Bot本体
+├── src/
+│   ├── frontend/     ← GAS Webアプリ
+│   └── backend/      ← バックエンド
+└── docs/             ← 設計ドキュメント
+
+## 関連リポジトリ（子）
+- marketplace-scraper: Terapeak・メルカリ・ヤフオクデータ収集
+- bay-auto: eBay自動化ツール
+
 ## 技術スタック（フェーズ1）
-- フロントエンド: HTML / CSS / JS（GAS Webアプリ）
+- フロントエンド: HTML/CSS/JS（GAS Webアプリ）
 - バックエンド: Google Apps Script
 - データ: Google Sheets（marketplace-scraperと連携）
 - 通知: Discord Webhook
 - 開発: Claude Code + claude --chrome
 
 ## フェーズ1 実装タスク
+- [ ] Discordサーバーチャンネル自動セットアップBot
+- [ ] トレンドアラート自動投稿Bot
 - [ ] ダッシュボード画面（トレンドデータ表示）
 - [ ] メンバー認証（招待制）
-- [ ] Discord Bot（アラート自動投稿）
 - [ ] Stripe連携（有料メンバーシップ）
 
-## 関連リポジトリ
-- marketplace-scraper: データ収集
-- sales-ops-with-claude: 全体管理
+## セキュリティルール
+- discord/.env は絶対にGitHubにコミットしない
+- Botトークンは .env.example にテンプレートのみ記載
+- 実際のトークンは別途Shingoさんが .env に手動入力
 
-## ポート・サービス
-- フェーズ2以降: さくらVPS（jarvis-claude.uk）
+## VPS移行後（フェーズ2）
+- さくらVPS（jarvis-claude.uk）でWebサイト本格稼働
+- Stripe決済・メンバー管理システム
+- PostgreSQL（Jarvis CRM既存DB）
