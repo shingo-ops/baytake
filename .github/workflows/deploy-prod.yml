@@ -1,0 +1,63 @@
+name: PROD デプロイ (GAS)
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "src/**"
+
+jobs:
+  deploy:
+    name: clasp push → PROD
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: リポジトリをチェックアウト
+        uses: actions/checkout@v4
+
+      - name: Node.js セットアップ
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: clasp をインストール
+        run: npm install -g @google/clasp
+
+      - name: clasp 認証情報を設定
+        run: |
+          cat > ~/.clasprc.json << EOF
+          {
+            "tokens": {
+              "default": {
+                "client_id": "${{ secrets.CLASP_CLIENT_ID }}",
+                "client_secret": "${{ secrets.CLASP_CLIENT_SECRET }}",
+                "type": "authorized_user",
+                "refresh_token": "${{ secrets.CLASP_REFRESH_TOKEN }}",
+                "access_token": "${{ secrets.CLASP_ACCESS_TOKEN }}"
+              }
+            }
+          }
+          EOF
+
+      - name: PROD 用 .clasp.json を配置
+        run: cp src/.clasp.prod.json src/.clasp.json
+
+      - name: clasp push (PROD)
+        run: cd src && clasp push --force
+
+      - name: Discord に完了通知
+        if: always()
+        env:
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+          STATUS: ${{ job.status }}
+        run: |
+          if [ -z "$DISCORD_WEBHOOK_URL" ]; then exit 0; fi
+          if [ "$STATUS" = "success" ]; then
+            MSG="🚀 **[PROD] GASデプロイ完了** \`${GITHUB_REF_NAME}\` @ \`${GITHUB_SHA::7}\`"
+          else
+            MSG="❌ **[PROD] GASデプロイ失敗** \`${GITHUB_REF_NAME}\` @ \`${GITHUB_SHA::7}\`"
+          fi
+          curl -s -X POST "$DISCORD_WEBHOOK_URL" \
+            -H "Content-Type: application/json" \
+            -d "{\"content\": \"$MSG\"}"
