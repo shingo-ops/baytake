@@ -43,8 +43,19 @@ jobs:
       - name: PROD 用 .clasp.json を配置
         run: cp src/.clasp.prod.json src/.clasp.json
 
-      - name: clasp push (PROD)
-        run: cd src && clasp push --force
+      - name: GASにpush・デプロイ更新 (PROD)
+        run: |
+          cd src
+          cp .clasp.prod.json .clasp.json
+          clasp push --force
+          DEPLOY_ID=$(clasp deployments | grep -v HEAD | grep AKfyc | awk '{print $2}' | head -1)
+          if [ -n "$DEPLOY_ID" ]; then
+            clasp deploy --deploymentId "$DEPLOY_ID" --description "Auto deploy $(date '+%Y-%m-%d %H:%M JST')"
+            echo "✅ デプロイ更新完了: $DEPLOY_ID"
+          else
+            clasp deploy --description "Auto deploy $(date '+%Y-%m-%d %H:%M JST')"
+            echo "✅ 新規デプロイ完了"
+          fi
 
       - name: Discord に完了通知
         if: always()
