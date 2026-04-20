@@ -1,2 +1,6 @@
 discord/.env
 node_modules/
+
+# clasp
+src/.clasp.json
+.clasprc.json

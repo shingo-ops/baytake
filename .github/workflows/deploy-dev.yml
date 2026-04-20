@@ -1,0 +1,74 @@
+name: DEV デプロイ (GAS)
+
+on:
+  push:
+    branches: [develop]
+    paths:
+      - "src/**"
+
+jobs:
+  deploy:
+    name: clasp push → DEV
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: リポジトリをチェックアウト
+        uses: actions/checkout@v4
+
+      - name: Node.js セットアップ
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: clasp をインストール
+        run: npm install -g @google/clasp
+
+      - name: clasp 認証情報を設定
+        run: |
+          cat > ~/.clasprc.json << EOF
+          {
+            "tokens": {
+              "default": {
+                "client_id": "${{ secrets.CLASP_CLIENT_ID }}",
+                "client_secret": "${{ secrets.CLASP_CLIENT_SECRET }}",
+                "type": "authorized_user",
+                "refresh_token": "${{ secrets.CLASP_REFRESH_TOKEN }}",
+                "access_token": "${{ secrets.CLASP_ACCESS_TOKEN }}"
+              }
+            }
+          }
+          EOF
+
+      - name: DEV 用 .clasp.json を配置
+        run: cp src/.clasp.dev.json src/.clasp.json
+
+      - name: GASにpush・デプロイ更新 (DEV)
+        run: |
+          cd src
+          cp .clasp.dev.json .clasp.json
+          clasp push --force
+          DEPLOY_ID=$(clasp deployments | grep -v HEAD | grep AKfyc | awk '{print $2}' | head -1)
+          if [ -n "$DEPLOY_ID" ]; then
+            clasp deploy --deploymentId "$DEPLOY_ID" --description "Auto deploy $(date '+%Y-%m-%d %H:%M JST')"
+            echo "✅ デプロイ更新完了: $DEPLOY_ID"
+          else
+            clasp deploy --description "Auto deploy $(date '+%Y-%m-%d %H:%M JST')"
+            echo "✅ 新規デプロイ完了"
+          fi
+
+      - name: Discord に完了通知
+        if: always()
+        env:
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+          STATUS: ${{ job.status }}
+        run: |
+          if [ -z "$DISCORD_WEBHOOK_URL" ]; then exit 0; fi
+          if [ "$STATUS" = "success" ]; then
+            MSG="✅ **[DEV] GASデプロイ完了** \`${GITHUB_REF_NAME}\` @ \`${GITHUB_SHA::7}\`"
+          else
+            MSG="❌ **[DEV] GASデプロイ失敗** \`${GITHUB_REF_NAME}\` @ \`${GITHUB_SHA::7}\`"
+          fi
+          curl -s -X POST "$DISCORD_WEBHOOK_URL" \
+            -H "Content-Type: application/json" \
+            -d "{\"content\": \"$MSG\"}"

@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BAYTAKE Dashboard</title>
+  <style>
+    /* ── BAYTAKE Brand Styles ──────────────────────────────────────────────── */
+    :root {
+      --black:  #0A0A0A;
+      --gold:   #C9A84C;
+      --red:    #B22222;
+      --white:  #F0F0F0;
+      --gray:   #1E1E1E;
+      --gray2:  #2A2A2A;
+      --border: #333333;
+      --gold-dim: rgba(201, 168, 76, 0.15);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--black);
+      color: var(--white);
+      font-family: Arial, 'Hiragino Sans', 'Meiryo', sans-serif;
+      font-size: 14px;
+      line-height: 1.6;
+      min-height: 100vh;
+    }
+
+    /* ── ヘッダー ─────────────────────────────────────────────────────────── */
+    header {
+      background: var(--gray);
+      border-bottom: 2px solid #C9A84C;
+      padding: 16px 32px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .logo { display: flex; align-items: center; gap: 12px; }
+    .logo-text { display: flex; flex-direction: column; }
+    .logo-name {
+      font-family: 'Arial Black', Arial, sans-serif;
+      font-size: 24px;
+      font-weight: 900;
+      letter-spacing: 5px;
+      background: linear-gradient(135deg, #E8C84A, #B8960C);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .logo-tagline { display: block; font-size: 8px; letter-spacing: 3px; color: #B22222; }
+
+    .header-meta { text-align: right; font-size: 12px; color: #666; }
+    .header-meta .val { color: var(--gold); font-weight: bold; }
+
+    /* ── メインレイアウト ─────────────────────────────────────────────────── */
+    main {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 24px 32px;
+      display: grid;
+      gap: 24px;
+    }
+
+    /* ── サマリーカード ──────────────────────────────────────────────────── */
+    .summary-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+
+    .summary-card {
+      background: var(--gray);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 20px 24px;
+      position: relative;
+      overflow: hidden;
+    }
+    .summary-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 3px;
+      background: var(--gold);
+    }
+    .summary-card.alert-card-summary::before { background: var(--red); }
+
+    .summary-label {
+      font-size: 11px; color: #888;
+      letter-spacing: 1px; text-transform: uppercase; margin-bottom: 8px;
+    }
+    .summary-value { font-size: 28px; font-weight: bold; color: var(--gold); }
+    .summary-card.alert-card-summary .summary-value { color: var(--red); }
+    .summary-sub { font-size: 11px; color: #666; margin-top: 4px; }
+
+    /* ── セクション共通 ──────────────────────────────────────────────────── */
+    section { background: var(--gray); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+
+    .section-header {
+      padding: 16px 24px;
+      border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; gap: 10px;
+      background: var(--gray2);
+    }
+    .section-title {
+      font-family: 'Arial Black', Arial, sans-serif;
+      font-size: 13px; letter-spacing: 1px;
+      color: var(--gold); text-transform: uppercase;
+    }
+    .badge {
+      background: var(--gold-dim);
+      color: var(--gold);
+      border: 1px solid var(--gold);
+      border-radius: 4px; padding: 2px 8px;
+      font-size: 11px; font-weight: bold;
+    }
+    .badge.red {
+      background: rgba(178,34,34,0.15);
+      color: var(--red); border-color: var(--red);
+    }
+
+    /* ── アラートグリッド ─────────────────────────────────────────────────── */
+    .alerts-grid {
+      padding: 16px 24px;
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 12px;
+    }
+
+    .alert-item {
+      background: rgba(178,34,34,0.08);
+      border: 1px solid rgba(178,34,34,0.3);
+      border-radius: 6px; padding: 14px 16px;
+      transition: border-color 0.2s;
+    }
+    .alert-item:hover { border-color: var(--red); }
+    .alert-price { font-size: 20px; font-weight: bold; color: var(--red); margin-bottom: 6px; }
+    .alert-title {
+      font-size: 13px; color: var(--white); margin-bottom: 8px;
+      display: -webkit-box; -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical; overflow: hidden; line-height: 1.4;
+    }
+    .alert-title a { color: var(--white); text-decoration: none; }
+    .alert-title a:hover { color: var(--gold); }
+    .alert-meta { display: flex; gap: 12px; font-size: 11px; color: #888; }
+
+    /* ── データテーブル ──────────────────────────────────────────────────── */
+    .table-wrap { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; }
+    thead th {
+      background: var(--gray2); color: #888;
+      font-size: 11px; font-weight: normal;
+      letter-spacing: 1px; text-transform: uppercase;
+      padding: 10px 16px; text-align: left;
+      border-bottom: 1px solid var(--border); white-space: nowrap;
+    }
+    tbody tr { border-bottom: 1px solid rgba(51,51,51,0.5); transition: background 0.15s; }
+    tbody tr:hover { background: rgba(201,168,76,0.04); }
+    tbody td { padding: 12px 16px; vertical-align: middle; font-size: 13px; }
+
+    .td-rank { width: 36px; text-align: center; color: #555; font-size: 12px; }
+    .td-title { max-width: 360px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .td-title a { color: var(--white); text-decoration: none; }
+    .td-title a:hover { color: var(--gold); }
+    .td-price { color: var(--gold); font-weight: bold; white-space: nowrap; }
+
+    .cond-badge { padding: 2px 8px; border-radius: 3px; font-size: 11px; font-weight: bold; white-space: nowrap; }
+    .cond-new    { background: rgba(201,168,76,0.2); color: var(--gold); }
+    .cond-graded { background: rgba(178,34,34,0.2); color: var(--red); }
+    .cond-used   { background: rgba(100,100,100,0.3); color: #aaa; }
+
+    .td-seller { color: #888; font-size: 12px; }
+
+    /* ── ローディング・エラー ────────────────────────────────────────────── */
+    .loading { padding: 48px; text-align: center; color: #555; }
+    .spinner {
+      width: 32px; height: 32px;
+      border: 3px solid var(--border); border-top-color: var(--gold);
+      border-radius: 50%; animation: spin 0.8s linear infinite;
+      margin: 0 auto 16px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .error-msg { padding: 24px; color: var(--red); text-align: center; font-size: 13px; }
+    .empty-msg  { padding: 24px; color: #555; text-align: center; font-size: 13px; }
+
+    @media (max-width: 768px) {
+      main { padding: 16px; }
+      .summary-grid { grid-template-columns: 1fr 1fr; }
+      header { padding: 12px 16px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ── ヘッダー ──────────────────────────────────────────────────────────── -->
+<header>
+  <div class="logo">
+    <svg width="45" height="45" viewBox="0 0 60 70" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" style="stop-color:#E8C84A"/>
+          <stop offset="100%" style="stop-color:#B8960C"/>
+        </linearGradient>
+      </defs>
+      <!-- 上昇矢印 -->
+      <line x1="0" y1="62" x2="55" y2="8" stroke="url(#goldGrad)" stroke-width="6" stroke-linecap="round"/>
+      <polyline points="32,6 57,6 57,32" fill="none" stroke="url(#goldGrad)" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+      <!-- 赤ドット -->
+      <circle cx="0" cy="63" r="6" fill="#B22222"/>
+    </svg>
+    <div class="logo-text">
+      <span class="logo-name">BAYTAKE</span>
+      <span class="logo-tagline">TAKE OVER THE BAY</span>
+    </div>
+  </div>
+  <div class="header-meta">
+    <div>最終取得: <span class="val" id="last-updated">読み込み中…</span></div>
+    <div>シート: <span id="sheet-name" style="color:#666;">—</span></div>
+  </div>
+</header>
+
+<!-- ── メイン ────────────────────────────────────────────────────────────── -->
+<main>
+
+  <!-- ① 取得状況サマリー -->
+  <div class="summary-grid">
+    <div class="summary-card">
+      <div class="summary-label">総取得件数</div>
+      <div class="summary-value" id="total-items">—</div>
+      <div class="summary-sub">最新シートの全商品数</div>
+    </div>
+    <div class="summary-card">
+      <div class="summary-label">トレンドアラート</div>
+      <div class="summary-value" id="alert-count-summary">—</div>
+      <div class="summary-sub">高額・高回転商品</div>
+    </div>
+    <div class="summary-card alert-card-summary">
+      <div class="summary-label">CAPTCHA 検知</div>
+      <div class="summary-value" id="captcha-count">—</div>
+      <div class="summary-sub">直近セッション</div>
+    </div>
+  </div>
+
+  <!-- ② トレンドアラートセクション -->
+  <section id="alerts-section">
+    <div class="section-header">
+      <div class="section-title">🚨 トレンドアラート</div>
+      <span class="badge red" id="alert-count">0</span>
+      <span style="font-size:11px;color:#666;margin-left:auto;">高額 × 高回転商品</span>
+    </div>
+    <div class="alerts-grid" id="alerts-container">
+      <div class="loading">
+        <div class="spinner"></div>
+        アラートデータを取得中…
+      </div>
+    </div>
+  </section>
+
+  <!-- ③ 最新取得データセクション -->
+  <section id="data-section">
+    <div class="section-header">
+      <div class="section-title">📊 最新取得データ</div>
+      <span class="badge" id="data-count">—</span>
+      <span style="font-size:11px;color:#666;margin-left:auto;">上位 20 件</span>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th class="td-rank">#</th>
+            <th>商品タイトル</th>
+            <th>平均落札額</th>
+            <th>コンディション</th>
+            <th style="text-align:center;">落札数</th>
+            <th>セラー</th>
+          </tr>
+        </thead>
+        <tbody id="data-tbody">
+          <tr>
+            <td colspan="6">
+              <div class="loading">
+                <div class="spinner"></div>
+                データを取得中…
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+</main>
+
+<script>
+/* ── BAYTAKE Dashboard — Data fetch & render ─────────────────────────────── */
+
+function init() {
+  google.script.run
+    .withSuccessHandler(onDataLoaded)
+    .withFailureHandler(function(e) { onError('data-section', e); })
+    .getData();
+
+  google.script.run
+    .withSuccessHandler(onAlertsLoaded)
+    .withFailureHandler(function(e) { onError('alerts-section', e); })
+    .getAlerts();
+}
+
+function onDataLoaded(result) {
+  if (!result || result.error) {
+    showError('data-section', (result && result.error) || 'データ取得失敗');
+    return;
+  }
+  renderSummary(result);
+  renderDataTable(result.rows || []);
+}
+
+function onAlertsLoaded(result) {
+  if (!result || result.error) {
+    showError('alerts-section', (result && result.error) || 'アラート取得失敗');
+    return;
+  }
+  renderAlerts(result.alerts || [], result.captchaCount || 0);
+}
+
+function onError(sectionId, err) {
+  var msg = (err && err.message) ? err.message : String(err);
+  showError(sectionId, msg);
+}
+
+/* ── サマリー ─────────────────────────────────────────────────────────────── */
+function renderSummary(result) {
+  var sheet = result.sheetName || '';
+  var fmt = sheet.replace(
+    /^(\d{4})(\d{2})(\d{2})_(\d{2})(\d{2})_JST$/,
+    '$1/$2/$3 $4:$5 JST'
+  );
+  setText('last-updated', fmt || '—');
+  setText('sheet-name', sheet || '—');
+  setText('total-items', Number(result.totalRows || 0).toLocaleString());
+  setText('data-count', (result.rows || []).length + ' 件');
+}
+
+/* ── アラート ─────────────────────────────────────────────────────────────── */
+function renderAlerts(alerts, captchaCount) {
+  setText('alert-count', alerts.length);
+  setText('alert-count-summary', alerts.length);
+  setText('captcha-count', captchaCount !== undefined ? captchaCount : '—');
+
+  var container = document.getElementById('alerts-container');
+  if (!container) return;
+
+  if (alerts.length === 0) {
+    container.innerHTML = '<div class="empty-msg">直近のアラート対象商品はありません</div>';
+    return;
+  }
+
+  container.innerHTML = alerts.map(function(item) {
+    var price = parseFloat(item.avg_sold_price || 0);
+    var sold  = item.total_sold_count || '—';
+    var cond  = esc(item.condition || '—');
+    var title = esc(item.title || 'タイトル不明');
+    var url   = item.item_url || '#';
+    return '<div class="alert-item">' +
+      '<div class="alert-price">$' + price.toLocaleString(undefined, {minimumFractionDigits:2,maximumFractionDigits:2}) + '</div>' +
+      '<div class="alert-title"><a href="' + url + '" target="_blank" rel="noopener">' + title + '</a></div>' +
+      '<div class="alert-meta"><span>📦 ' + cond + '</span><span>🔁 ' + sold + '件落札</span></div>' +
+      '</div>';
+  }).join('');
+}
+
+/* ── データテーブル ────────────────────────────────────────────────────────── */
+function renderDataTable(rows) {
+  var tbody = document.getElementById('data-tbody');
+  if (!tbody) return;
+
+  if (rows.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="6"><div class="empty-msg">データなし</div></td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = rows.map(function(row, i) {
+    var price  = parseFloat(row.avg_sold_price || 0);
+    var sold   = row.total_sold_count || '—';
+    var cond   = row.condition || '—';
+    var seller = esc(row.seller_name || '—');
+    var title  = esc(row.title || '—');
+    var url    = row.item_url || '#';
+    var cls    = condClass(cond);
+    return '<tr>' +
+      '<td class="td-rank">' + (i+1) + '</td>' +
+      '<td class="td-title"><a href="' + url + '" target="_blank" rel="noopener" title="' + title + '">' + title + '</a></td>' +
+      '<td class="td-price">$' + price.toLocaleString(undefined, {minimumFractionDigits:2,maximumFractionDigits:2}) + '</td>' +
+      '<td><span class="cond-badge ' + cls + '">' + esc(cond) + '</span></td>' +
+      '<td style="text-align:center;color:#888;">' + sold + '</td>' +
+      '<td class="td-seller">' + seller + '</td>' +
+      '</tr>';
+  }).join('');
+}
+
+/* ── ユーティリティ ────────────────────────────────────────────────────────── */
+function condClass(cond) {
+  var c = (cond || '').toLowerCase();
+  if (c.indexOf('new') !== -1) return 'cond-new';
+  if (c.indexOf('psa') !== -1 || c.indexOf('bgs') !== -1 || c.indexOf('cgc') !== -1) return 'cond-graded';
+  return 'cond-used';
+}
+
+function esc(s) {
+  return String(s)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function setText(id, val) {
+  var el = document.getElementById(id);
+  if (el) el.textContent = val;
+}
+
+function showError(sectionId, msg) {
+  var el = document.getElementById(sectionId);
+  if (!el) return;
+  var inner = el.querySelector('.loading,.alerts-grid,.table-wrap');
+  if (inner) inner.innerHTML = '<div class="error-msg">⚠️ ' + esc(msg) + '</div>';
+}
+
+document.addEventListener('DOMContentLoaded', init);
+</script>
+</body>
+</html>
