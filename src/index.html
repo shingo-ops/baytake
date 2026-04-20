@@ -273,8 +273,8 @@
             <th>商品タイトル</th>
             <th>平均落札額</th>
             <th>コンディション</th>
-            <th style="text-align:center;">落札数</th>
-            <th>セラー</th>
+            <th style="text-align:center;">合計販売数</th>
+            <th>最終販売日</th>
           </tr>
         </thead>
         <tbody id="data-tbody">
@@ -372,9 +372,13 @@ function renderAlerts(alerts, captchaCount) {
 }
 
 /* ── データテーブル ────────────────────────────────────────────────────────── */
+var _tableData = [];
+
 function renderDataTable(rows) {
   var tbody = document.getElementById('data-tbody');
   if (!tbody) return;
+
+  _tableData = rows;
 
   if (rows.length === 0) {
     tbody.innerHTML = '<tr><td colspan="7"><div class="empty-msg">データなし</div></td></tr>';
@@ -382,18 +386,18 @@ function renderDataTable(rows) {
   }
 
   tbody.innerHTML = rows.map(function(row, i) {
-    var price     = parseFloat(row.avg_sold_price || 0);
-    var sold      = row.total_sold_count || '—';
-    var cond      = row.condition || '';
-    var seller    = esc(row.seller_name || '—');
-    var title     = esc(row.title || '—');
-    var url       = row.item_url || '#';
-    var imgUrl    = row.image_url || '';
-    var imgTitle  = (row.title || '').replace(/'/g, '');
+    var price        = parseFloat(row.avg_sold_price || 0);
+    var sold         = row.total_sold_count || '—';
+    var cond         = row.condition || '';
+    var date         = esc(row.date_last_sold || '—');
+    var title        = esc(row.title || '—');
+    var url          = row.item_url || '#';
+    var imgUrl       = row.image_url || '';
+    var imgDataTitle = (row.title || '').replace(/"/g, '&quot;');
     return '<tr>' +
       '<td style="padding:8px 10px;">' +
         (imgUrl
-          ? '<img src="' + imgUrl + '" alt="' + title + '" style="width:50px;height:50px;object-fit:cover;border-radius:4px;cursor:pointer;border:1px solid #222;" onclick="openImageModal(\'' + imgUrl + '\',\'' + imgTitle + '\')" onerror="this.src=\'\';this.style.display=\'none\'">'
+          ? '<img src="' + imgUrl + '" data-title="' + imgDataTitle + '" data-url="' + imgUrl + '" data-idx="' + i + '" alt="' + title + '" style="width:50px;height:50px;object-fit:cover;border-radius:4px;cursor:pointer;border:1px solid #222;" onclick="openDetailSlide(this)" onerror="this.src=\'https://via.placeholder.com/50x50/1a1a1a/C9A84C?text=END\'">'
           : '') +
       '</td>' +
       '<td class="td-rank">' + (i+1) + '</td>' +
@@ -401,7 +405,7 @@ function renderDataTable(rows) {
       '<td class="td-price">$' + price.toLocaleString(undefined, {minimumFractionDigits:2,maximumFractionDigits:2}) + '</td>' +
       '<td title="' + esc(cond) + '">' + formatCondition(cond) + '</td>' +
       '<td style="text-align:center;color:#888;">' + sold + '</td>' +
-      '<td class="td-seller">' + seller + '</td>' +
+      '<td class="td-seller">' + date + '</td>' +
       '</tr>';
   }).join('');
 }
@@ -454,27 +458,50 @@ function showError(sectionId, msg) {
 
 document.addEventListener('DOMContentLoaded', init);
 
-function openImageModal(url, title) {
-  var modal = document.getElementById('imageModal');
-  document.getElementById('modalImage').src = url;
-  document.getElementById('modalTitle').textContent = title;
-  modal.style.display = 'flex';
+function openDetailSlide(img) {
+  var url = img.dataset.url;
+  var idx = img.dataset.idx;
+  var row = _tableData[idx];
+  if (!row) return;
+
+  document.getElementById('detailImage').src = url || '';
+  document.getElementById('detailTitle').textContent = row.title || '';
+  document.getElementById('detailPrice').textContent = row.avg_sold_price ? '$' + parseFloat(row.avg_sold_price).toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2}) : '—';
+  document.getElementById('detailCondition').innerHTML = formatCondition(row.condition);
+  document.getElementById('detailSold').textContent = row.total_sold_count || '—';
+  document.getElementById('detailDate').textContent = row.date_last_sold || '—';
+  document.getElementById('detailSeller').textContent = row.seller_name || '—';
+  document.getElementById('detailLink').href = row.item_url || '#';
+
+  document.getElementById('detailPanel').style.right = '0';
+  document.getElementById('detailOverlay').style.display = 'block';
 }
 
-function closeImageModal() {
-  document.getElementById('imageModal').style.display = 'none';
+function closeDetailPanel() {
+  document.getElementById('detailPanel').style.right = '-420px';
+  document.getElementById('detailOverlay').style.display = 'none';
 }
 
 document.addEventListener('keydown', function(e) {
-  if (e.key === 'Escape') closeImageModal();
+  if (e.key === 'Escape') closeDetailPanel();
 });
 </script>
-<div id="imageModal" onclick="closeImageModal()" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.85);z-index:9999;justify-content:center;align-items:center;cursor:pointer;">
-  <div style="text-align:center">
-    <img id="modalImage" src="" style="max-width:80vw;max-height:80vh;border-radius:8px;border:2px solid #C9A84C;">
-    <p id="modalTitle" style="color:#C9A84C;margin-top:12px;font-size:14px;max-width:80vw;"></p>
-    <p style="color:#555;font-size:11px;margin-top:4px">クリックで閉じる</p>
+<div id="detailPanel" style="position:fixed;top:0;right:-420px;width:400px;height:100%;background:#111;border-left:2px solid #C9A84C;z-index:9999;transition:right 0.3s ease;overflow-y:auto;padding:24px;box-sizing:border-box;">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
+    <span style="color:#C9A84C;font-size:12px;letter-spacing:2px">ITEM DETAIL</span>
+    <button onclick="closeDetailPanel()" style="background:none;border:1px solid #333;color:#888;padding:4px 10px;cursor:pointer;border-radius:4px;">✕ 閉じる</button>
   </div>
+  <img id="detailImage" src="" style="width:100%;border-radius:8px;border:1px solid #222;margin-bottom:16px;max-height:300px;object-fit:contain;background:#0a0a0a;">
+  <h3 id="detailTitle" style="color:#E8C84A;font-size:14px;margin-bottom:16px;line-height:1.5"></h3>
+  <table style="width:100%;border-collapse:collapse;font-size:12px">
+    <tr><td style="color:#555;padding:6px 0;width:40%">平均落札価格</td><td id="detailPrice" style="color:#fff"></td></tr>
+    <tr><td style="color:#555;padding:6px 0">コンディション</td><td id="detailCondition" style="color:#fff"></td></tr>
+    <tr><td style="color:#555;padding:6px 0">合計販売数</td><td id="detailSold" style="color:#fff"></td></tr>
+    <tr><td style="color:#555;padding:6px 0">最終販売日</td><td id="detailDate" style="color:#C9A84C"></td></tr>
+    <tr><td style="color:#555;padding:6px 0">セラー</td><td id="detailSeller" style="color:#fff"></td></tr>
+  </table>
+  <a id="detailLink" href="#" target="_blank" style="display:block;margin-top:20px;background:#C9A84C;color:#0A0A0A;text-align:center;padding:10px;border-radius:4px;text-decoration:none;font-weight:bold;font-size:13px;letter-spacing:1px;">eBayで確認 →</a>
 </div>
+<div id="detailOverlay" onclick="closeDetailPanel()" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:9998;"></div>
 </body>
 </html>
