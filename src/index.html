@@ -392,7 +392,7 @@ function renderDataTable(rows) {
       '<td class="td-rank">' + (i+1) + '</td>' +
       '<td class="td-title"><a href="' + url + '" target="_blank" rel="noopener" title="' + title + '">' + title + '</a></td>' +
       '<td class="td-price">$' + price.toLocaleString(undefined, {minimumFractionDigits:2,maximumFractionDigits:2}) + '</td>' +
-      '<td><span class="cond-badge ' + cls + '">' + esc(cond) + '</span></td>' +
+      '<td title="' + esc(cond) + '"><span class="cond-badge ' + cls + '">' + esc(truncate(cond, 40)) + '</span></td>' +
       '<td style="text-align:center;color:#888;">' + sold + '</td>' +
       '<td class="td-seller">' + seller + '</td>' +
       '</tr>';
@@ -400,6 +400,12 @@ function renderDataTable(rows) {
 }
 
 /* ── ユーティリティ ────────────────────────────────────────────────────────── */
+function truncate(str, n) {
+  return str && str.length > n
+    ? str.substr(0, n) + '...'
+    : str;
+}
+
 function condClass(cond) {
   var c = (cond || '').toLowerCase();
   if (c.indexOf('new') !== -1) return 'cond-new';
